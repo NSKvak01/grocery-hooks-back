@@ -2,8 +2,14 @@ const Grocery = require("../model/Grocery")
 
 const getAllGroceries = async(req,res)=>{
     try {
-        let payload = await Grocery.find({})
-        res.json(payload)
+        if(Object.keys(req.query).length === 0){
+            let foundGroceries = await Grocery.find({})
+            res.json({payload:foundGroceries})
+        } else {
+            let sortedGroceries = await Grocery.find({}).sort({Date: req.query.date});
+            // console.log(sortedGroceries)
+            res.json({payload:sortedGroceries})
+        }
     } catch (e) {
         res.status(500).json({error:e, message:e.message})
     }
@@ -43,9 +49,30 @@ const deleteGrocery = async(req,res)=>{
     }
 }
 
+async function sortByPurchased(req,res){
+    try {
+        let purchased = req.query.purchased
+        let isPurchasedOrder = purchased ==="true" ?true:false
+        let sortByPurchased = req.query.sort?req.query.sort:null
+        let finalSort
+        if(!sortByPurchased){
+            finalSort = null
+        } else{
+            finalSort = sortByPurchased === "ascending" ?1 :-1
+        }
+        let sortedGroceries = await Grocery.find({purchased:isPurchasedOrder}).sort({purchased:finalSort})
+        console.log(sortedGroceries)
+        res.json({payload:sortedGroceries})
+    } catch (error) {
+        res.status(500).json({message:"error", error:error.message})
+    }
+}
+
+
 module.exports = {
     getAllGroceries,
     createGrocery,
     updateGrocery,
     deleteGrocery,
+    sortByPurchased
 }
